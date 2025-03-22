@@ -1,67 +1,74 @@
-import tkinter as tk
+import streamlit as st
+import matplotlib.pyplot as plt
 import numpy as np
 
-class TriangleBoardApp:
-    def __init__(self, root):
-        self.canvas = tk.Canvas(root, width=600, height=600, bg='white')
-        self.canvas.pack()
+def draw_triangle(ax, x, y, direction='U', value=None, color='white'):
+    height = np.sqrt(3) / 2
+    if direction == 'U':
+        points = np.array([[x, y], [x + 0.5, y + height], [x + 1, y]])
+    else:
+        points = np.array([[x, y + height], [x + 0.5, y], [x + 1, y + height]])
 
-        self.board_structure = [
-            ['N', 'N', 'N', 'U', 'D', 'U', 'N', 'N', 'N'],
-            ['U', 'D', 'U', 'D', 'U', 'D', 'U', 'D', 'U'],
-            ['D', 'U', 'D', 'U', 'D', 'U', 'D', 'U', 'D'],
-            ['U', 'D', 'U', 'D', 'U', 'D', 'U', 'D', 'U'],
-            ['D', 'U', 'D', 'U', 'D', 'U', 'D', 'U', 'D'],
-            ['N', 'N', 'N', 'D', 'U', 'D', 'N', 'N', 'N'],
-        ]
+    polygon = plt.Polygon(points, edgecolor='black', facecolor=color)
+    ax.add_patch(polygon)
 
-        self.cell_size = 40
-        self.height = np.sqrt(3) / 2 * self.cell_size
-        self.selected_cell = None
-        self.board_values = [[None]*9 for _ in range(6)]
+    if value is not None:
+        cx = x + 0.5
+        cy = y + height / 2
+        ax.text(cx, cy, str(value), fontsize=14, ha='center', va='center')
 
-        self.draw_board()
-        self.canvas.bind("<Button-1>", self.on_click)
-        root.bind("<Key>", self.on_key)
+def draw_board(board_values, selected_pos):
+    fig, ax = plt.subplots(figsize=(8, 8))
+    board_structure = [
+        ['N', 'N', 'N', 'U', 'D', 'U', 'N', 'N', 'N'],
+        ['U', 'D', 'U', 'D', 'U', 'D', 'U', 'D', 'U'],
+        ['D', 'U', 'D', 'U', 'D', 'U', 'D', 'U', 'D'],
+        ['U', 'D', 'U', 'D', 'U', 'D', 'U', 'D', 'U'],
+        ['D', 'U', 'D', 'U', 'D', 'U', 'D', 'U', 'D'],
+        ['N', 'N', 'N', 'D', 'U', 'D', 'N', 'N', 'N'],
+    ]
 
-    def draw_board(self):
-        self.canvas.delete("all")
-        for row_idx, row in enumerate(self.board_structure):
-            for col_idx, cell in enumerate(row):
-                if cell != 'N':
-                    x_offset = col_idx * (self.cell_size / 2) + 100
-                    y_offset = row_idx * (self.height) + 50
-                    self.draw_triangle(x_offset, y_offset, direction=cell, row=row_idx, col=col_idx)
+    height = np.sqrt(3) / 2
+    for row_idx, row in enumerate(board_structure):
+        for col_idx, cell in enumerate(row):
+            if cell != 'N':
+                x_offset = col_idx * 0.5
+                y_offset = (5 - row_idx) * height
+                value = board_values[row_idx][col_idx]
+                color = 'lightblue' if selected_pos == (row_idx, col_idx) else 'white'
+                draw_triangle(ax, x_offset, y_offset, direction=cell, value=value, color=color)
 
-    def draw_triangle(self, x, y, direction, row, col):
-        if direction == 'U':
-            points = [x, y + self.height, x + self.cell_size / 2, y, x + self.cell_size, y + self.height]
-        else:
-            points = [x, y, x + self.cell_size / 2, y + self.height, x + self.cell_size, y]
+    ax.set_xlim(-1, 6)
+    ax.set_ylim(-1, 6)
+    ax.set_aspect('equal')
+    ax.axis('off')
+    st.pyplot(fig)
 
-        fill_color = 'lightblue' if self.selected_cell == (row, col) else 'white'
-        self.canvas.create_polygon(points, outline='black', fill=fill_color, tags=f"{row},{col}")
+# Streamlit セッションの初期化
+if 'board_values' not in st.session_state:
+    st.session_state.board_values = [[None]*9 for _ in range(6)]
 
-        value = self.board_values[row][col]
-        if value is not None:
-            self.canvas.create_text(x + self.cell_size / 2, y + self.height / 2, text=str(value), font=('Arial', 16))
+st.title('Hanagramアプリ（インタラクティブ版）')
 
-    def on_click(self, event):
-        item = self.canvas.find_closest(event.x, event.y)
-        tags = self.canvas.gettags(item)
-        if tags:
-            row, col = map(int, tags[0].split(','))
-            self.selected_cell = (row, col)
-            self.draw_board()
+# 行列選択
+row = st.selectbox("行を選んでください（上から0〜5）", [0,1,2,3,4,5])
+col = st.selectbox("列を選んでください（左から0〜8）", [0,1,2,3,4,5,6,7,8])
 
-    def on_key(self, event):
-        if self.selected_cell and event.char in '0123456789':
-            row, col = self.selected_cell
-            self.board_values[row][col] = int(event.char)
-            self.draw_board()
+number = st.selectbox("数字を選んでください", [None,0,1,2,3,4,5,6,7,8,9])
 
-if __name__ == "__main__":
-    root = tk.Tk()
-    root.title("Triangle Board App")
-    app = TriangleBoardApp(root)
-    root.mainloop()
+if st.button('数字をセルに入力'):
+    board_structure = [
+        ['N', 'N', 'N', 'U', 'D', 'U', 'N', 'N', 'N'],
+        ['U', 'D', 'U', 'D', 'U', 'D', 'U', 'D', 'U'],
+        ['D', 'U', 'D', 'U', 'D', 'U', 'D', 'U', 'D'],
+        ['U', 'D', 'U', 'D', 'U', 'D', 'U', 'D', 'U'],
+        ['D', 'U', 'D', 'U', 'D', 'U', 'D', 'U', 'D'],
+        ['N', 'N', 'N', 'D', 'U', 'D', 'N', 'N', 'N'],
+    ]
+    if board_structure[row][col] != 'N':
+        st.session_state.board_values[row][col] = number
+    else:
+        st.warning('ここはセルが存在しません。')
+
+selected_pos = (row, col)
+draw_board(st.session_state.board_values, selected_pos)
