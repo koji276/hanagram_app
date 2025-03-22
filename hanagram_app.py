@@ -74,7 +74,7 @@ def draw_board(board_values, selected_pos, initial_board_values):
 
     # A～D だけ上・右に少しずらす(例)
     label_shifts = {
-        "A": (0.5, 0.4),
+        "A": (0.5, 0.3),
         "B": (0.5, 1.5),
         "C": (0.5, 1.1),
         "D": (0.5, 1.4),
@@ -82,10 +82,10 @@ def draw_board(board_values, selected_pos, initial_board_values):
         "F": (0.5, 0.6),
         "G": (0.5, 0.2),
         "H": (0.5, 0.5),
-        "I": (0.0, 0.4),
-        "J": (0.0, 0.4),
-        "K": (0.0, 0.4),
-        "L": (0.0, 0.4),
+        "I": (0.1, 0.4),
+        "J": (0.1, 0.4),
+        "K": (0.1, 0.4),
+        "L": (0.1, 0.4),
     }
 
     for label, (r, c) in label_positions.items():
