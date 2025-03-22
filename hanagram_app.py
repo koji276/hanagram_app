@@ -3,7 +3,7 @@ import pandas as pd
 import os
 import matplotlib.pyplot as plt
 import numpy as np
-import copy  # ★ 追加
+import copy
 
 #############################################
 # 三角形描画
@@ -33,7 +33,7 @@ def draw_triangle(ax, x, y, direction='U', value=None, color='white'):
         ax.text(cx, cy, str(value), fontsize=14, ha='center', va='center')
 
 #############################################
-# ボード描画
+# ボード描画 (初期値セル=薄青, 選択セル=黄, 他=白)
 #############################################
 def draw_board(board_values, selected_pos, initial_board_values):
     fig, ax = plt.subplots(figsize=(8, 8))
@@ -63,8 +63,8 @@ def draw_board(board_values, selected_pos, initial_board_values):
                 else:
                     color = 'white'       # 通常セル（ユーザーが入力可）
 
-                draw_triangle(ax, x_offset, y_offset, direction=cell,
-                              value=value, color=color)
+                draw_triangle(ax, x_offset, y_offset,
+                              direction=cell, value=value, color=color)
 
     # --- ラベル(A〜L)配置 ---
     label_positions = {
@@ -113,7 +113,7 @@ if 'initial_board_values' not in st.session_state:
 #############################################
 # タイトル
 #############################################
-st.title('Hanagramアプリ')
+st.title('Hanagramアプリ（初期値=薄青, 選択=黄, 他=白）')
 
 #############################################
 # 列(A～L)＆番号(0～8) 選択
@@ -140,7 +140,7 @@ pos_index = st.selectbox("番号(0～8)を選択", list(range(9)))
 #############################################
 # 数字を選んで入力
 #############################################
-number = st.selectbox("数字を選んでください", [None,0,1,2,3,4,5,6,7,8,9])
+number = st.selectbox("数字を選んでください", [None, 0,1,2,3,4,5,6,7,8,9])
 
 if st.button('数字をセルに入力'):
     board_structure = [
@@ -169,6 +169,7 @@ draw_board(st.session_state.board_values, (row, col), st.session_state.initial_b
 # 重複チェックや完成判定など
 #############################################
 def generate_combinations():
+    # board_structure と同じ
     board_structure = [
         ['N', 'N', 'N', 'U', 'D', 'U', 'N', 'N', 'N'],
         ['U', 'D', 'U', 'D', 'U', 'D', 'U', 'D', 'U'],
@@ -187,7 +188,7 @@ def generate_combinations():
         temp_row = []
         for c_idx, cell in enumerate(row_data):
             if cell != 'N':
-                temp_row.append((r_idx,c_idx))
+                temp_row.append((r_idx, c_idx))
         if len(temp_row) > 3:
             combos['横'].append(temp_row)
 
@@ -230,17 +231,14 @@ def check_all_lines_completed(board_values, combos):
                 if val is None:
                     return False
                 digits.append(val)
-            if len(set(digits)) != 9:  # 重複チェック
+            # ここで len(set(digits)) != 9 なら重複あり or 9種類でない
+            if len(set(digits)) != 9:
                 return False
     return True
 
 combinations = generate_combinations()
-# st.subheader("12列の組み合わせ確認（テスト表示）")
-# for direction, lines in combinations.items():
-#     st.write(f"### {direction}")
-#     for idx, line in enumerate(lines):
-#        st.write(f"{direction} - 列{idx+1}: {line}")
 
+# 重複チェック＆完成チェック
 st.subheader("🔎 数字の重複チェック結果")
 dup_found, dup_info = check_duplicates(st.session_state.board_values, combinations)
 if dup_found:
@@ -255,7 +253,7 @@ if check_all_lines_completed(st.session_state.board_values, combinations):
     st.success("🎉 すべてのラインが完成しました！")
 
 #############################################
-# CSV読込用関数・読み込み処理
+# CSV読込用関数
 #############################################
 def load_puzzle_from_csv(filename):
     df = pd.read_csv(filename, header=None)
@@ -268,25 +266,32 @@ def load_puzzle_from_csv(filename):
                 puzzle_data[r_idx][c_idx] = None
     return puzzle_data
 
+#############################################
+# パズル読み込みUI（ボタンを残す方法）
+#############################################
 puzzle_folder = 'puzzles'
 puzzle_files = [f for f in os.listdir(puzzle_folder) if f.endswith('.csv')]
+
 if puzzle_files:
-    selected_puzzle_file = st.selectbox('🔍 パズルを選択', puzzle_files)
-    if st.button('選択したパズルを読み込み'):
-        puzzle_path = os.path.join(puzzle_folder, selected_puzzle_file)
+    # 1) セレクトボックスで選んだファイル名を session_state に保存
+    st.selectbox(
+        label='🔍 パズルを選択',
+        options=puzzle_files,
+        key="selected_file"
+    )
+
+    # 2) ボタンを押したら選択ファイルを読み込む関数
+    def load_selected_puzzle():
+        puzzle_path = os.path.join(puzzle_folder, st.session_state.selected_file)
         loaded_puzzle = load_puzzle_from_csv(puzzle_path)
-
-        # ▼▼▼ ここを修正 ▼▼▼
-        # 以前は同じリスト参照を代入していた
-        # st.session_state.board_values = loaded_puzzle
-        # st.session_state.initial_board_values = loaded_puzzle
-
-        # deep copyを使って、初期値とユーザ入力用を分離
+        # board_values と initial_board_values を deepcopy で分離
         st.session_state.board_values = copy.deepcopy(loaded_puzzle)
         st.session_state.initial_board_values = copy.deepcopy(loaded_puzzle)
-        # ▲▲▲ ここまで修正 ▲▲▲
+        st.success(f"{st.session_state.selected_file} を読み込みました！")
 
-        st.success(f"{selected_puzzle_file} を読み込みました！")
+    # 3) ボタンに on_click を指定 → 1度のクリックで読み込み
+    if st.button('選択したパズルを読み込み', on_click=load_selected_puzzle):
+        pass
 else:
-    st.warning("puzzlesフォルダにCSVファイルがありません。")
+    st.warning("puzzles フォルダに CSV ファイルがありません。")
 
