@@ -281,7 +281,7 @@ if puzzle_completed:
     if st.button("表示"):
         # ハイライトする数字リストを更新
         st.session_state.highlight_digits = selected_digits
-        st.experimental_rerun()  # すぐ画面反映したい場合は再実行
+#        st.experimental_rerun()  # すぐ画面反映したい場合は再実行
 else:
     st.info("パズルが完成すると、選択した数字をピンクでハイライトできます。")
 
