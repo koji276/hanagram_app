@@ -192,4 +192,4 @@ if st.button('選択したパズルを読み込み'):
     puzzle_path = os.path.join(puzzle_folder, selected_puzzle_file)
     st.session_state.board_values = load_puzzle_from_csv(puzzle_path)
     st.success(f"{selected_puzzle_file} を読み込みました！")
-    st.experimental_rerun()
+#    st.experimental_rerun()
