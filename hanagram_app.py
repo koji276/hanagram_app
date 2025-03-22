@@ -105,7 +105,6 @@ def draw_board(board_values, selected_pos, initial_board_values):
         ax.text(x_offset, y_offset, label, color="red", fontsize=16,
                 ha="center", va="center")
 
-    # 表示範囲(外側ラベルが見えるよう拡張)
     ax.set_xlim(-2, 7)
     ax.set_ylim(-2, 7)
     ax.set_aspect('equal')
@@ -122,9 +121,6 @@ if 'board_values' not in st.session_state:
 if 'initial_board_values' not in st.session_state:
     st.session_state.initial_board_values = [[None]*9 for _ in range(6)]
 
-#############################################
-# タイトル
-#############################################
 st.title('Hanagramアプリ（各ライン9マスに0～9の重複なし）')
 
 #############################################
@@ -178,9 +174,8 @@ if st.button('数字をセルに入力'):
 #############################################
 draw_board(st.session_state.board_values, (row, col), st.session_state.initial_board_values)
 
-
 #############################################
-# 12ラインの定義＆重複チェックなど
+# 重複チェック等
 #############################################
 def generate_combinations():
     board_structure = [
@@ -197,7 +192,7 @@ def generate_combinations():
         '斜め_左上から右下': [],
     }
 
-    # 横方向 (4本)
+    # 横方向 (3つ以下を除外)
     for r_idx, row_data in enumerate(board_structure):
         temp_row = []
         for c_idx, cell in enumerate(row_data):
@@ -206,14 +201,14 @@ def generate_combinations():
         if len(temp_row) > 3:
             combinations['横'].append(temp_row)
 
-    # 斜め方向(右上->左下)
+    # 斜め方向（右上から左下）
     combinations['斜め_右上から左下'] = [
         [(0,4),(0,3),(1,3),(1,2),(2,2),(2,1),(3,1),(3,0),(4,0)],
         [(0,5),(1,5),(1,4),(2,4),(2,3),(3,3),(3,2),(4,2),(4,1)],
         [(1,7),(1,6),(2,6),(2,5),(3,5),(3,4),(4,4),(4,3),(5,3)],
         [(1,8),(2,8),(2,7),(3,7),(3,6),(4,6),(4,5),(5,5),(5,4)]
     ]
-    # 斜め方向(左上->右下)
+    # 斜め方向（左上から右下）
     combinations['斜め_左上から右下'] = [
         [(0,4),(0,5),(1,5),(1,6),(2,6),(2,7),(3,7),(3,8),(4,8)],
         [(0,3),(1,3),(1,4),(2,4),(2,5),(3,5),(3,6),(4,6),(4,7)],
@@ -223,59 +218,46 @@ def generate_combinations():
     return combinations
 
 def check_duplicates(board_values, combinations):
-    """
-    従来の「重複があるかどうか」をリアルタイムに表示する
-    """
     duplicates_found = False
     duplicate_info = []
+
     for direction, lines in combinations.items():
         for idx, line in enumerate(lines):
             nums_in_line = []
             for (r, c) in line:
-                val = board_values[r][c]
-                if val is not None:
-                    nums_in_line.append(val)
+                value = board_values[r][c]
+                if value is not None:
+                    nums_in_line.append(value)
 
             dups = set([num for num in nums_in_line if nums_in_line.count(num) > 1])
+
             if dups:
                 duplicates_found = True
                 duplicate_info.append(
                     f"{direction} - 列{idx+1} で数字が重複しています: {dups}"
                 )
+
     return duplicates_found, duplicate_info
 
 def check_all_lines_completed(board_values, combinations):
-    """
-    12本のラインがすべて「0～9のうち9個の重複なし」で埋まっているか確認する。
-    - 各ライン9マスに数字が入り、重複がない
-    - つまり None がなく、かつ len(set(そのラインの数字)) == 9
-    - すべてのラインでこれが真なら完成
-    """
     for direction, lines in combinations.items():
         for idx, line in enumerate(lines):
-            # 9マスの数字を収集
             digits = []
             for (r, c) in line:
                 val = board_values[r][c]
                 if val is None:
-                    return False  # 未入力がある
+                    return False
                 digits.append(val)
 
-            # 9個の数字が重複なく入っているか
-            # (0<=val<=9 の範囲かどうかも一応チェック)
             if len(set(digits)) != 9:
                 return False
             if any(d < 0 or d > 9 for d in digits):
                 return False
 
-    # すべてのラインが要件を満たした
     return True
 
-
-#############################################
-# 重複チェック結果の表示
-#############################################
 combinations = generate_combinations()
+
 st.subheader("12列の組み合わせ確認（テスト表示）")
 for direction, lines in combinations.items():
     st.write(f"### {direction}")
@@ -291,16 +273,10 @@ if duplicates_found:
 else:
     st.success("✅ 現在、重複はありません。")
 
-#############################################
-# 完成チェック（各ラインが9個の重複なし数字で埋まったらOK）
-#############################################
 if check_all_lines_completed(st.session_state.board_values, combinations):
     st.balloons()
     st.success("🎉 すべてのラインに 0〜9 のうち9個が重複なく入りました！完成です！")
 
-#############################################
-# CSV読込用関数
-#############################################
 def load_puzzle_from_csv(filename):
     df = pd.read_csv(filename, header=None)
     puzzle_data = df.where(pd.notnull(df), None).values.tolist()
@@ -312,9 +288,6 @@ def load_puzzle_from_csv(filename):
                 puzzle_data[r_idx][c_idx] = None
     return puzzle_data
 
-#############################################
-# パズルファイル選択＆読み込み
-#############################################
 puzzle_folder = 'puzzles'
 puzzle_files = [f for f in os.listdir(puzzle_folder) if f.endswith('.csv')]
 if puzzle_files:
@@ -322,7 +295,6 @@ if puzzle_files:
     if st.button('選択したパズルを読み込み'):
         puzzle_path = os.path.join(puzzle_folder, selected_puzzle_file)
         loaded_puzzle = load_puzzle_from_csv(puzzle_path)
-        # board_values, initial_board_values にセット
         st.session_state.board_values = loaded_puzzle
         st.session_state.initial_board_values = loaded_puzzle
         st.success(f"{selected_puzzle_file} を読み込みました！")
