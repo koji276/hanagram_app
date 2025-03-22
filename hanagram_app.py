@@ -235,11 +235,11 @@ def check_all_lines_completed(board_values, combos):
     return True
 
 combinations = generate_combinations()
-st.subheader("12列の組み合わせ確認（テスト表示）")
-for direction, lines in combinations.items():
-    st.write(f"### {direction}")
-    for idx, line in enumerate(lines):
-        st.write(f"{direction} - 列{idx+1}: {line}")
+# st.subheader("12列の組み合わせ確認（テスト表示）")
+# for direction, lines in combinations.items():
+#     st.write(f"### {direction}")
+#     for idx, line in enumerate(lines):
+#        st.write(f"{direction} - 列{idx+1}: {line}")
 
 st.subheader("🔎 数字の重複チェック結果")
 dup_found, dup_info = check_duplicates(st.session_state.board_values, combinations)
