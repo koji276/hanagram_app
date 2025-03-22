@@ -99,7 +99,7 @@ def generate_combinations():
         if len(temp_row) > 3:
             combinations['横'].append(temp_row)
 
-    # 斜め方向（右上から左下）【手動定義】
+    # 斜め方向（右上から左下）【手動定義済み】
     combinations['斜め_右上から左下'] = [
         [(0, 4), (0, 3), (1, 3), (1, 2), (2, 2), (2, 1), (3, 1), (3, 0), (4, 0)],
         [(0, 5), (1, 5), (1, 4), (2, 4), (2, 3), (3, 3), (3, 2), (4, 2), (4, 1)],
@@ -107,15 +107,13 @@ def generate_combinations():
         [(1, 8), (2, 8), (2, 7), (3, 7), (3, 6), (4, 6), (4, 5), (5, 5), (5, 4)]
     ]
 
-    # 斜め方向（左上から右下）は後ほど修正
-    diagonals_lr = {}
-    for row_idx in range(6):
-        for col_idx in range(9):
-            if board_structure[row_idx][col_idx] != 'N':
-                key = col_idx + row_idx
-                diagonals_lr.setdefault(key, []).append((row_idx, col_idx))
-
-    combinations['斜め_左上から右下'] = [v for v in diagonals_lr.values() if len(v) > 1]
+    # 斜め方向（左上から右下）【手動定義】
+    combinations['斜め_左上から右下'] = [
+        [(0, 4), (0, 5), (1, 5), (1, 6), (2, 6), (2, 7), (3, 7), (3, 8), (4, 8)],
+        [(0, 3), (1, 3), (2, 3), (2, 4), (2, 5), (3, 5), (3, 6), (4, 6), (4, 7)],
+        [(1, 1), (1, 2), (2, 2), (2, 3), (3, 3), (3, 4), (4, 4), (4, 5), (5, 5)],
+        [(1, 0), (2, 0), (2, 1), (3, 1), (3, 2), (4, 2), (4, 3), (5, 3), (5, 4)]
+    ]
 
     return combinations
 
