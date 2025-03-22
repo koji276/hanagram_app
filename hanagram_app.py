@@ -127,3 +127,39 @@ for direction, lines in combinations.items():
     for idx, line in enumerate(lines):
         st.write(f"{direction} - 列{idx+1}: {line}")
 
+def check_duplicates(board_values, combinations):
+    duplicates_found = False
+    duplicate_info = []
+
+    for direction, lines in combinations.items():
+        for idx, line in enumerate(lines):
+            nums_in_line = []
+            for row, col in line:
+                value = board_values[row][col]
+                if value is not None:
+                    nums_in_line.append(value)
+
+            duplicates = set([num for num in nums_in_line if nums_in_line.count(num) > 1])
+
+            if duplicates:
+                duplicates_found = True
+                duplicate_info.append(f"{direction} - 列{idx+1} で数字が重複しています: {duplicates}")
+
+    return duplicates_found, duplicate_info
+
+# Streamlitで重複チェックの結果を表示
+st.subheader("🔎 数字の重複チェック結果")
+
+# セッションから現在の盤面を取得
+current_board_values = st.session_state.board_values
+
+# 重複チェックを実行
+duplicates_found, duplicate_info = check_duplicates(current_board_values, combinations)
+
+# 結果表示
+if duplicates_found:
+    st.error("⚠️ 重複が見つかりました！以下を確認してください。")
+    for info in duplicate_info:
+        st.write(info)
+else:
+    st.success("✅ 現在、重複はありません。")
