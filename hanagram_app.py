@@ -83,6 +83,11 @@ if st.button('数字をセルに入力'):
 selected_pos = (row, col)
 draw_board(st.session_state.board_values, selected_pos, st.session_state.initial_board_values)
 
+# パズル完了チェック
+if all(None not in row for row in st.session_state.board_values):
+    st.balloons()
+    st.success('🎉 おめでとうございます！完成です！')
+
 # puzzlesフォルダからCSV読み込み
 def load_puzzle_from_csv(filename):
     df = pd.read_csv(filename, header=None)
