@@ -43,15 +43,20 @@ def draw_board_with_numbers(board_values):
     ax.set_aspect('equal')
     ax.axis('off')
     
-    # Streamlit対応に変更
+    # Streamlit対応の描画
     st.pyplot(fig)
 
-# Streamlitのページ設定
+# Streamlitページ設定
 st.title('Hanagramアプリ（Streamlit版）')
 
-# ボードに配置する数字 (例としてNone)
+# ボードの初期値
 board_values = [
     [None, None, None, None, None, None, None, None, None],
     [None, None, None, None, None, None, None, None, None],
     [None, None, None, None, None, None, None, None, None],
-    [None, None, None, None, None, None, N
+    [None, None, None, None, None, None, None, None, None],
+    [None, None, None, None, None, None, None, None, None],
+    [None, None, None, None, None, None, None, None, None],
+]
+
+draw_board_with_numbers(board_values)
