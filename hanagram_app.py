@@ -33,7 +33,7 @@ def draw_triangle(ax, x, y, direction='U', value=None, color='white'):
         ax.text(cx, cy, str(value), fontsize=14, ha='center', va='center')
 
 #############################################
-# ボード描画 (初期値セル=薄青, 選択セル=黄, 他=白)
+# ボード描画
 #############################################
 def draw_board(board_values, selected_pos, initial_board_values):
     fig, ax = plt.subplots(figsize=(8, 8))
