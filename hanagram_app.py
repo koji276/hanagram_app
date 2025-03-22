@@ -1,7 +1,7 @@
+import streamlit as st
 import matplotlib.pyplot as plt
 import numpy as np
 
-# 三角形を描画する関数（正三角形）
 def draw_triangle(ax, x, y, direction='U', value=None):
     height = np.sqrt(3) / 2
     if direction == 'U':
@@ -17,7 +17,6 @@ def draw_triangle(ax, x, y, direction='U', value=None):
         cy = y + height / 2
         ax.text(cx, cy, str(value), fontsize=14, ha='center', va='center')
 
-# 数字入りのボードを描画する関数
 def draw_board_with_numbers(board_values):
     fig, ax = plt.subplots(figsize=(8, 8))
 
@@ -43,18 +42,16 @@ def draw_board_with_numbers(board_values):
     ax.set_ylim(-1, 6)
     ax.set_aspect('equal')
     ax.axis('off')
-    plt.show()
+    
+    # Streamlit対応に変更
+    st.pyplot(fig)
 
-# ボードに配置する数字 (Noneは空欄)
+# Streamlitのページ設定
+st.title('Hanagramアプリ（Streamlit版）')
+
+# ボードに配置する数字 (例としてNone)
 board_values = [
     [None, None, None, None, None, None, None, None, None],
     [None, None, None, None, None, None, None, None, None],
     [None, None, None, None, None, None, None, None, None],
-    [None, None, None, None, None, None, None, None, None],
-    [None, None, None, None, None, None, None, None, None],
-    [None, None, None, None, None, None, None, None, None],
-]
-
-# 数字入りのボードを描画
-draw_board_with_numbers(board_values)
-
+    [None, None, None, None, None, None, N
