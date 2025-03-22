@@ -90,26 +90,24 @@ def generate_combinations():
         '斜め_左上から右下': [],
     }
 
-    # 横方向 (3つ以下の短いものを除外)
+    # 横方向 (3つ以下を除外)
     for row_idx, row in enumerate(board_structure):
         temp_row = []
         for col_idx, cell in enumerate(row):
             if cell != 'N':
                 temp_row.append((row_idx, col_idx))
-        if len(temp_row) > 3:  # ←ここで3以下の短い列を除外
+        if len(temp_row) > 3:
             combinations['横'].append(temp_row)
 
-    # 斜め方向（右上から左下）
-    diagonals_rl = {}
-    for row_idx in range(6):
-        for col_idx in range(9):
-            if board_structure[row_idx][col_idx] != 'N':
-                key = col_idx - row_idx
-                diagonals_rl.setdefault(key, []).append((row_idx, col_idx))
+    # 斜め方向（右上から左下）【手動定義】
+    combinations['斜め_右上から左下'] = [
+        [(0, 4), (0, 3), (1, 3), (1, 2), (2, 2), (2, 1), (3, 1), (3, 0), (4, 0)],
+        [(0, 5), (1, 5), (1, 4), (2, 4), (2, 3), (3, 3), (3, 2), (4, 2), (4, 1)],
+        [(1, 7), (1, 6), (2, 6), (2, 5), (3, 5), (3, 4), (4, 4), (4, 3), (5, 3)],
+        [(1, 8), (2, 8), (2, 7), (3, 7), (3, 6), (4, 6), (4, 5), (5, 5), (5, 4)]
+    ]
 
-    combinations['斜め_右上から左下'] = [v for v in diagonals_rl.values() if len(v) > 1]
-
-    # 斜め方向（左上から右下）
+    # 斜め方向（左上から右下）は後ほど修正
     diagonals_lr = {}
     for row_idx in range(6):
         for col_idx in range(9):
