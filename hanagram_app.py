@@ -35,7 +35,9 @@ def draw_triangle(ax, x, y, direction='U', value=None, color='white'):
 #############################################
 # ボード描画 (初期値セル=薄青, 選択セル=黄, 他=白)
 #############################################
-def draw_board(board_values, selected_pos, initial_board_values):
+def draw_board(board_values, selected_pos, initial_board_values, puzzle_completed=False, highlight_digits=None):
+    """puzzle_completed: bool
+       highlight_digits: (list or set) 完成時にピンクでハイライトする数字群"""
     fig, ax = plt.subplots(figsize=(8, 8))
 
     board_structure = [
@@ -55,13 +57,17 @@ def draw_board(board_values, selected_pos, initial_board_values):
                 y_offset = (5 - r_idx) * height
                 value = board_values[r_idx][c_idx]
 
-                # 色分けロジック
+                # --- 通常ロジックで色を決定 ---
                 if initial_board_values[r_idx][c_idx] is not None:
                     color = 'lightblue'   # 初期値(変更不可)
                 elif (r_idx, c_idx) == selected_pos:
                     color = 'yellow'      # 選択中のセル
                 else:
                     color = 'white'       # 通常セル（ユーザーが入力可）
+
+                # --- パズル完成済かつハイライト対象の数字ならピンクで上書き ---
+                if puzzle_completed and highlight_digits and value in highlight_digits:
+                    color = 'pink'
 
                 draw_triangle(ax, x_offset, y_offset,
                               direction=cell, value=value, color=color)
@@ -110,10 +116,14 @@ if 'board_values' not in st.session_state:
 if 'initial_board_values' not in st.session_state:
     st.session_state.initial_board_values = [[None]*9 for _ in range(6)]
 
+# ハイライト対象の数字を保持する Session State（最初は空リスト/空セットなど）
+if 'highlight_digits' not in st.session_state:
+    st.session_state.highlight_digits = []
+
 #############################################
 # タイトル
 #############################################
-st.title('Hanagramアプリ')
+st.title('Hanagramアプリ（初期値=薄青, 選択=黄, 完成後選んだ数字=ピンク）')
 
 #############################################
 # 列(A～L)＆番号(0～8) 選択
@@ -140,9 +150,10 @@ pos_index = st.selectbox("番号(0～8)を選択", list(range(9)))
 #############################################
 # 数字を選んで入力
 #############################################
-number = st.selectbox("数字を選んでください", [None, 0,1,2,3,4,5,6,7,8,9])
+number = st.selectbox("数字を選んでください", [None,0,1,2,3,4,5,6,7,8,9])
 
 if st.button('数字をセルに入力'):
+    # board_structure
     board_structure = [
         ['N','N','N','U','D','U','N','N','N'],
         ['U','D','U','D','U','D','U','D','U'],
@@ -161,15 +172,9 @@ if st.button('数字をセルに入力'):
             st.session_state.board_values[row][col] = number
 
 #############################################
-# ボード描画
-#############################################
-draw_board(st.session_state.board_values, (row, col), st.session_state.initial_board_values)
-
-#############################################
-# 重複チェックや完成判定など
+# 重複チェックや完成判定
 #############################################
 def generate_combinations():
-    # board_structure と同じ
     board_structure = [
         ['N', 'N', 'N', 'U', 'D', 'U', 'N', 'N', 'N'],
         ['U', 'D', 'U', 'D', 'U', 'D', 'U', 'D', 'U'],
@@ -188,7 +193,7 @@ def generate_combinations():
         temp_row = []
         for c_idx, cell in enumerate(row_data):
             if cell != 'N':
-                temp_row.append((r_idx, c_idx))
+                temp_row.append((r_idx,c_idx))
         if len(temp_row) > 3:
             combos['横'].append(temp_row)
 
@@ -231,16 +236,30 @@ def check_all_lines_completed(board_values, combos):
                 if val is None:
                     return False
                 digits.append(val)
-            # ここで len(set(digits)) != 9 なら重複あり or 9種類でない
             if len(set(digits)) != 9:
                 return False
     return True
 
 combinations = generate_combinations()
 
-# 重複チェック＆完成チェック
-st.subheader("🔎 数字の重複チェック結果")
 dup_found, dup_info = check_duplicates(st.session_state.board_values, combinations)
+puzzle_completed = check_all_lines_completed(st.session_state.board_values, combinations)
+
+#############################################
+# ボード描画：ハイライト対象数字を考慮
+#############################################
+draw_board(
+    board_values = st.session_state.board_values,
+    selected_pos = (row, col),
+    initial_board_values = st.session_state.initial_board_values,
+    puzzle_completed = puzzle_completed,
+    highlight_digits = st.session_state.highlight_digits
+)
+
+#############################################
+#  重複チェック＆完成メッセージ
+#############################################
+st.subheader("🔎 数字の重複チェック結果")
 if dup_found:
     st.error("⚠️ 重複があります。")
     for info in dup_info:
@@ -248,9 +267,23 @@ if dup_found:
 else:
     st.success("✅ 現在、重複はありません。")
 
-if check_all_lines_completed(st.session_state.board_values, combinations):
+if puzzle_completed:
     st.balloons()
     st.success("🎉 すべてのラインが完成しました！")
+    # --- 完成後のみハイライトUIを表示 ---
+    st.subheader("🌸 花柄(ハナグラム)表示オプション")
+    # 0~9のうち、どの数字をピンクにするか複数選択
+    selected_digits = st.multiselect(
+        "ピンク色でハイライトする数字を選んでください（複数選択可）",
+        [0,1,2,3,4,5,6,7,8,9],
+        default = st.session_state.highlight_digits  # 既存のハイライトを初期表示
+    )
+    if st.button("表示"):
+        # ハイライトする数字リストを更新
+        st.session_state.highlight_digits = selected_digits
+        st.experimental_rerun()  # すぐ画面反映したい場合は再実行
+else:
+    st.info("パズルが完成すると、選択した数字をピンクでハイライトできます。")
 
 #############################################
 # CSV読込用関数
@@ -273,25 +306,23 @@ puzzle_folder = 'puzzles'
 puzzle_files = [f for f in os.listdir(puzzle_folder) if f.endswith('.csv')]
 
 if puzzle_files:
-    # 1) セレクトボックスで選んだファイル名を session_state に保存
     st.selectbox(
         label='🔍 パズルを選択',
         options=puzzle_files,
         key="selected_file"
     )
 
-    # 2) ボタンを押したら選択ファイルを読み込む関数
     def load_selected_puzzle():
         puzzle_path = os.path.join(puzzle_folder, st.session_state.selected_file)
         loaded_puzzle = load_puzzle_from_csv(puzzle_path)
         # board_values と initial_board_values を deepcopy で分離
         st.session_state.board_values = copy.deepcopy(loaded_puzzle)
         st.session_state.initial_board_values = copy.deepcopy(loaded_puzzle)
+        # ハイライト選択もクリアする（パズル切り替え時にリセットしたい場合）
+        st.session_state.highlight_digits = []
         st.success(f"{st.session_state.selected_file} を読み込みました！")
 
-    # 3) ボタンに on_click を指定 → 1度のクリックで読み込み
     if st.button('選択したパズルを読み込み', on_click=load_selected_puzzle):
         pass
 else:
     st.warning("puzzles フォルダに CSV ファイルがありません。")
-
