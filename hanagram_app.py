@@ -3,6 +3,7 @@ import pandas as pd
 import os
 import matplotlib.pyplot as plt
 import numpy as np
+import copy  # ★ 追加
 
 #############################################
 # 三角形描画
@@ -80,7 +81,6 @@ def draw_board(board_values, selected_pos, initial_board_values):
         "K": (2, -1),
         "L": (1, -1),
     }
-    # ラベルのオフセット調整
     label_shifts = {
         "A": (0.5, 0.3), "B": (0.5, 1.5), "C": (0.5, 1.1), "D": (0.5, 1.4),
         "E": (0.5, 0.4), "F": (0.5, 0.6), "G": (0.5, 0.2), "H": (0.5, 0.5),
@@ -93,9 +93,7 @@ def draw_board(board_values, selected_pos, initial_board_values):
         dx, dy = label_shifts.get(label, (0,0))
         x_lab += dx
         y_lab += dy
-
-        ax.text(x_lab, y_lab, label, color="red", fontsize=16,
-                ha="center", va="center")
+        ax.text(x_lab, y_lab, label, color="red", fontsize=16, ha="center", va="center")
 
     ax.set_xlim(-2, 7)
     ax.set_ylim(-2, 7)
@@ -145,7 +143,6 @@ pos_index = st.selectbox("番号(0～8)を選択", list(range(9)))
 number = st.selectbox("数字を選んでください", [None,0,1,2,3,4,5,6,7,8,9])
 
 if st.button('数字をセルに入力'):
-    # ボード形状を参照
     board_structure = [
         ['N','N','N','U','D','U','N','N','N'],
         ['U','D','U','D','U','D','U','D','U'],
@@ -161,7 +158,6 @@ if st.button('数字をセルに入力'):
         if st.session_state.initial_board_values[row][col] is not None:
             st.warning('このセルは初期値なので変更できません。')
         else:
-            # ユーザー入力を受け付ける
             st.session_state.board_values[row][col] = number
 
 #############################################
@@ -170,7 +166,7 @@ if st.button('数字をセルに入力'):
 draw_board(st.session_state.board_values, (row, col), st.session_state.initial_board_values)
 
 #############################################
-# 重複チェックや完成判定など（元のまま）
+# 重複チェックや完成判定など
 #############################################
 def generate_combinations():
     board_structure = [
@@ -226,7 +222,6 @@ def check_duplicates(board_values, combos):
     return dup_found, dup_info
 
 def check_all_lines_completed(board_values, combos):
-    # 各ラインに None がなく、9個の数字重複なしなら完成
     for direction, lines in combos.items():
         for line in lines:
             digits = []
@@ -235,7 +230,7 @@ def check_all_lines_completed(board_values, combos):
                 if val is None:
                     return False
                 digits.append(val)
-            if len(set(digits)) != 9:
+            if len(set(digits)) != 9:  # 重複チェック
                 return False
     return True
 
@@ -281,12 +276,17 @@ if puzzle_files:
         puzzle_path = os.path.join(puzzle_folder, selected_puzzle_file)
         loaded_puzzle = load_puzzle_from_csv(puzzle_path)
 
-        # 読み込み後、初期値セルを薄青にするため「initial_board_valuesにセット」
-        st.session_state.board_values = loaded_puzzle
-        st.session_state.initial_board_values = loaded_puzzle
+        # ▼▼▼ ここを修正 ▼▼▼
+        # 以前は同じリスト参照を代入していた
+        # st.session_state.board_values = loaded_puzzle
+        # st.session_state.initial_board_values = loaded_puzzle
+
+        # deep copyを使って、初期値とユーザ入力用を分離
+        st.session_state.board_values = copy.deepcopy(loaded_puzzle)
+        st.session_state.initial_board_values = copy.deepcopy(loaded_puzzle)
+        # ▲▲▲ ここまで修正 ▲▲▲
 
         st.success(f"{selected_puzzle_file} を読み込みました！")
 else:
     st.warning("puzzlesフォルダにCSVファイルがありません。")
-
 
