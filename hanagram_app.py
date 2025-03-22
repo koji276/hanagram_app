@@ -66,7 +66,7 @@ def draw_board(board_values, selected_pos, initial_board_values):
 if 'board_values' not in st.session_state:
     st.session_state.board_values = [[None]*9 for _ in range(6)]
 
-# 追加：初期値用の配列をセッションに持たせる
+# 初期値用の配列をセッションに持たせる
 if 'initial_board_values' not in st.session_state:
     st.session_state.initial_board_values = [[None]*9 for _ in range(6)]
 
@@ -91,15 +91,15 @@ if st.button('数字をセルに入力'):
         ['N', 'N', 'N', 'D', 'U', 'D', 'N', 'N', 'N'],
     ]
 
-    # ① ボード上にセルがあるかを確認
+    # 1) ボード上にセルがあるかを確認
     if board_structure[row][col] == 'N':
         st.warning('ここはセルが存在しません。')
     else:
-        # ② 初期値セル(=黄色)の場合は入力不可
+        # 2) 初期値セル(=黄色)の場合は入力不可
         if st.session_state.initial_board_values[row][col] is not None:
             st.warning('このセルは初期値なので変更できません。')
         else:
-            # ③ 通常セルなので入力を受け付ける
+            # 3) 通常セルなので入力を受け付ける
             st.session_state.board_values[row][col] = number
 
 
@@ -108,7 +108,14 @@ draw_board(st.session_state.board_values, selected_pos,
            st.session_state.initial_board_values)
 
 
-# --- セル位置を基準に12列を生成する関数 ---
+# --- パズルが完成したかどうかチェック ---
+# すべてのセルに None がなければ「完成」とみなす
+if all(None not in row_vals for row_vals in st.session_state.board_values):
+    st.balloons()
+    st.success("🎉 おめでとうございます！完成です！")
+
+
+# --- 以下、重複チェックやCSV読み込みなどの機能 ---
 def generate_combinations():
     board_structure = [
         ['N', 'N', 'N', 'U', 'D', 'U', 'N', 'N', 'N'],
@@ -134,7 +141,7 @@ def generate_combinations():
         if len(temp_row) > 3:
             combinations['横'].append(temp_row)
 
-    # 斜め方向（右上から左下）【手動定義済み】
+    # 斜め方向（右上から左下）
     combinations['斜め_右上から左下'] = [
         [(0, 4), (0, 3), (1, 3), (1, 2), (2, 2), (2, 1), (3, 1), (3, 0), (4, 0)],
         [(0, 5), (1, 5), (1, 4), (2, 4), (2, 3), (3, 3), (3, 2), (4, 2), (4, 1)],
@@ -142,7 +149,7 @@ def generate_combinations():
         [(1, 8), (2, 8), (2, 7), (3, 7), (3, 6), (4, 6), (4, 5), (5, 5), (5, 4)]
     ]
 
-    # 斜め方向（左上から右下）【手動定義】
+    # 斜め方向（左上から右下）
     combinations['斜め_左上から右下'] = [
         [(0, 4), (0, 5), (1, 5), (1, 6), (2, 6), (2, 7), (3, 7), (3, 8), (4, 8)],
         [(0, 3), (1, 3), (1, 4), (2, 4), (2, 5), (3, 5), (3, 6), (4, 6), (4, 7)],
@@ -153,7 +160,6 @@ def generate_combinations():
     return combinations
 
 
-# --- 重複チェック関数 ---
 def check_duplicates(board_values, combinations):
     duplicates_found = False
     duplicate_info = []
@@ -177,7 +183,6 @@ def check_duplicates(board_values, combinations):
     return duplicates_found, duplicate_info
 
 
-# --- 12列の組み合わせ作成＆テスト表示 ---
 combinations = generate_combinations()
 st.subheader("12列の組み合わせ確認（テスト表示）")
 for direction, lines in combinations.items():
@@ -186,7 +191,6 @@ for direction, lines in combinations.items():
         st.write(f"{direction} - 列{idx+1}: {line}")
 
 
-# --- 重複チェック結果を表示 ---
 st.subheader("🔎 数字の重複チェック結果")
 current_board_values = st.session_state.board_values
 duplicates_found, duplicate_info = check_duplicates(current_board_values, combinations)
@@ -229,5 +233,5 @@ if st.button('選択したパズルを読み込み'):
     st.session_state.initial_board_values = loaded_puzzle
 
     st.success(f"{selected_puzzle_file} を読み込みました！")
-    # 読み込み後は描画を更新
-    # st.experimental_rerun()  # 必要に応じてコメント解除すると即再描画リロード
+    # st.experimental_rerun()  # 必要に応じてコメントアウト外すと即リロード
+
