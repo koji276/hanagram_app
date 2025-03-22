@@ -1,4 +1,6 @@
 import streamlit as st
+import pandas as pd
+import os
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -163,3 +165,31 @@ if duplicates_found:
         st.write(info)
 else:
     st.success("✅ 現在、重複はありません。")
+
+# puzzlesフォルダからCSVファイルを取得して表示
+def load_puzzle_from_csv(filename):
+    df = pd.read_csv(filename, header=None)
+    board_values = df.where(pd.notnull(df), None).values.tolist()
+    
+    # 文字列の数字を整数に変換（空白はNoneに）
+    for r_idx, row in enumerate(board_values):
+        for c_idx, val in enumerate(row):
+            if pd.notnull(val):
+                board_values[r_idx][c_idx] = int(val)
+            else:
+                board_values[r_idx][c_idx] = None
+    return board_values
+
+# puzzlesフォルダからファイル一覧を取得
+puzzle_folder = 'puzzles'
+puzzle_files = [f for f in os.listdir(puzzle_folder) if f.endswith('.csv')]
+
+# ドロップダウンでパズルを選択
+selected_puzzle_file = st.selectbox('🔍 パズルを選択', puzzle_files)
+
+# 選択したパズルを読み込み
+if st.button('選択したパズルを読み込み'):
+    puzzle_path = os.path.join(puzzle_folder, selected_puzzle_file)
+    st.session_state.board_values = load_puzzle_from_csv(puzzle_path)
+    st.success(f"{selected_puzzle_file} を読み込みました！")
+    st.experimental_rerun()
