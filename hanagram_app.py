@@ -10,18 +10,22 @@ import numpy as np
 def draw_triangle(ax, x, y, direction='U', value=None, color='white'):
     height = np.sqrt(3) / 2
     if direction == 'U':
-        points = np.array([[x, y],
-                           [x + 0.5, y + height],
-                           [x + 1, y]])
+        points = np.array([
+            [x, y],
+            [x + 0.5, y + height],
+            [x + 1, y]
+        ])
     else:  # direction == 'D'
-        points = np.array([[x, y + height],
-                           [x + 0.5, y],
-                           [x + 1, y + height]])
+        points = np.array([
+            [x, y + height],
+            [x + 0.5, y],
+            [x + 1, y + height]
+        ])
 
     polygon = plt.Polygon(points, edgecolor='black', facecolor=color)
     ax.add_patch(polygon)
 
-    # 数値があれば三角形の中央に表示
+    # 数値があれば中央に描画
     if value is not None:
         cx = x + 0.5
         cy = y + height / 2
@@ -46,26 +50,26 @@ def draw_board(board_values, selected_pos, initial_board_values):
 
     for r_idx, row_data in enumerate(board_structure):
         for c_idx, cell in enumerate(row_data):
-            if cell != 'N':  # マスがあるときのみ描画
+            if cell != 'N':  # 有効マスのみ
                 x_offset = c_idx * 0.5
                 y_offset = (5 - r_idx) * height
                 value = board_values[r_idx][c_idx]
 
-                # --- 色分けロジック ---
+                # --- 色分け ---
                 if initial_board_values[r_idx][c_idx] is not None:
-                    # 初期値セルは薄青
+                    # 初期値セル -> 薄青
                     color = 'lightblue'
                 elif (r_idx, c_idx) == selected_pos:
-                    # 選択中セルは黄色
+                    # 選択セル -> 黄
                     color = 'yellow'
                 else:
-                    # それ以外のセルは白
+                    # ユーザー入力セル(または空) -> 白
                     color = 'white'
 
                 draw_triangle(ax, x_offset, y_offset,
                               direction=cell, value=value, color=color)
 
-    # --- ラベル(A～L)配置（任意） ---
+    # --- A~L ラベルを配置 ---
     label_positions = {
         "A": (-1, 4),
         "B": (1, 6),
@@ -95,11 +99,12 @@ def draw_board(board_values, selected_pos, initial_board_values):
         "L": (0.1, 0.4),
     }
     for label, (r, c) in label_positions.items():
-        x_offset = c * 0.5 + label_shifts.get(label, (0,0))[0]
-        y_offset = (5 - r)*height + label_shifts.get(label, (0,0))[1]
-        ax.text(x_offset, y_offset, label, color="red", fontsize=16,
-                ha="center", va="center")
+        x_label = c * 0.5 + label_shifts.get(label, (0,0))[0]
+        y_label = (5 - r)*height + label_shifts.get(label, (0,0))[1]
+        ax.text(x_label, y_label, label,
+                color="red", fontsize=16, ha="center", va="center")
 
+    # 表示範囲(盤面外のラベルも見えるよう拡張)
     ax.set_xlim(-2, 7)
     ax.set_ylim(-2, 7)
     ax.set_aspect('equal')
@@ -116,14 +121,10 @@ if 'board_values' not in st.session_state:
 if 'initial_board_values' not in st.session_state:
     st.session_state.initial_board_values = [[None]*9 for _ in range(6)]
 
+st.title("Hanagramアプリ\n(初期値: 薄青, 選択セル: 黄, それ以外: 白)")
 
 #############################################
-# タイトル
-#############################################
-st.title("Hanagramアプリ（初期値セル=薄青、選択セル=黄、他=白）")
-
-#############################################
-# 列(A～L), 番号(0～8) => (row,col)
+# 列(A～L), 番号(0～8) -> (row,col)
 #############################################
 lines_map = {
     "A": [(0,4),(0,3),(1,3),(1,2),(2,2),(2,1),(3,1),(3,0),(4,0)],
@@ -140,19 +141,17 @@ lines_map = {
     "L": [(1,0),(1,1),(1,2),(1,3),(1,4),(1,5),(1,6),(1,7),(1,8)]
 }
 
-col_letter = st.selectbox("列(A～L)", list(lines_map.keys()))
-pos_index = st.selectbox("番号(0～8)", list(range(9)))
-
-# 選択されたマスの座標
+col_letter = st.selectbox("列(A～L)を選んでください", list(lines_map.keys()))
+pos_index = st.selectbox("番号(0～8)を選んでください", list(range(9)))
 row, col = lines_map[col_letter][pos_index]
 
 #############################################
-# 数字入力UI
+# 数字を選んで入力 (初期値は上書き不可)
 #############################################
 number = st.selectbox("数字を選んでください", [None,0,1,2,3,4,5,6,7,8,9])
 
 if st.button("数字をセルに入力"):
-    # ボード構造を参照
+    # ボード形状を参照
     board_structure = [
         ['N','N','N','U','D','U','N','N','N'],
         ['U','D','U','D','U','D','U','D','U'],
@@ -161,15 +160,13 @@ if st.button("数字をセルに入力"):
         ['D','U','D','U','D','U','D','U','D'],
         ['N','N','N','D','U','D','N','N','N'],
     ]
-    # 1) セルが存在するか
     if board_structure[row][col] == 'N':
         st.warning("ここはセルが存在しません。")
     else:
-        # 2) 初期値かどうか
+        # 初期値セルは変更不可
         if st.session_state.initial_board_values[row][col] is not None:
             st.warning("このセルは初期値なので変更できません。")
         else:
-            # 3) 入力を反映
             st.session_state.board_values[row][col] = number
 
 #############################################
@@ -177,39 +174,41 @@ if st.button("数字をセルに入力"):
 #############################################
 draw_board(st.session_state.board_values, (row,col), st.session_state.initial_board_values)
 
-#############################################
-# 以下、重複チェックや完成判定・CSV読込等を追加
-#############################################
 
+#############################################
+# 12ラインの組み合わせ生成
+#############################################
 def generate_combinations():
     board_structure = [
-        ['N','N','N','U','D','U','N','N','N'],
-        ['U','D','U','D','U','D','U','D','U'],
-        ['D','U','D','U','D','U','D','U','D'],
-        ['U','D','U','D','U','D','U','D','U'],
-        ['D','U','D','U','D','U','D','U','D'],
-        ['N','N','N','D','U','D','N','N','N'],
+        ['N', 'N', 'N', 'U', 'D', 'U', 'N', 'N', 'N'],
+        ['U', 'D', 'U', 'D', 'U', 'D', 'U', 'D', 'U'],
+        ['D', 'U', 'D', 'U', 'D', 'U', 'D', 'U', 'D'],
+        ['U', 'D', 'U', 'D', 'U', 'D', 'U', 'D', 'U'],
+        ['D', 'U', 'D', 'U', 'D', 'U', 'D', 'U', 'D'],
+        ['N', 'N', 'N', 'D', 'U', 'D', 'N', 'N', 'N'],
     ]
     combos = {
         '横': [],
         '斜め_右上から左下': [],
         '斜め_左上から右下': [],
     }
-    # 横方向
+    # 横方向 (4本)
     for r_idx, row_data in enumerate(board_structure):
         temp_row = []
         for c_idx, cell in enumerate(row_data):
             if cell != 'N':
-                temp_row.append((r_idx, c_idx))
+                temp_row.append((r_idx,c_idx))
         if len(temp_row) > 3:
             combos['横'].append(temp_row)
 
+    # 斜め (右上->左下)
     combos['斜め_右上から左下'] = [
         [(0,4),(0,3),(1,3),(1,2),(2,2),(2,1),(3,1),(3,0),(4,0)],
         [(0,5),(1,5),(1,4),(2,4),(2,3),(3,3),(3,2),(4,2),(4,1)],
         [(1,7),(1,6),(2,6),(2,5),(3,5),(3,4),(4,4),(4,3),(5,3)],
         [(1,8),(2,8),(2,7),(3,7),(3,6),(4,6),(4,5),(5,5),(5,4)]
     ]
+    # 斜め (左上->右下)
     combos['斜め_左上から右下'] = [
         [(0,4),(0,5),(1,5),(1,6),(2,6),(2,7),(3,7),(3,8),(4,8)],
         [(0,3),(1,3),(1,4),(2,4),(2,5),(3,5),(3,6),(4,6),(4,7)],
@@ -218,26 +217,33 @@ def generate_combinations():
     ]
     return combos
 
+combinations = generate_combinations()
+
+#############################################
+# 重複チェック
+#############################################
 def check_duplicates(board_values, combos):
-    duplicates_found = False
-    duplicate_info = []
+    found = False
+    info = []
     for direction, lines in combos.items():
         for idx, line in enumerate(lines):
-            nums_in_line = []
+            vals = []
             for (r, c) in line:
                 val = board_values[r][c]
                 if val is not None:
-                    nums_in_line.append(val)
-            dups = set([num for num in nums_in_line if nums_in_line.count(num) > 1])
+                    vals.append(val)
+            # 重複があれば報告
+            dups = set([num for num in vals if vals.count(num) > 1])
             if dups:
-                duplicates_found = True
-                duplicate_info.append(
-                    f"{direction} - 列{idx+1} に重複: {dups}"
-                )
-    return duplicates_found, duplicate_info
+                found = True
+                info.append(f"{direction} - 列{idx+1} で重複: {dups}")
+    return found, info
 
+#############################################
+# 全ライン完成チェック
+#############################################
 def check_all_lines_completed(board_values, combos):
-    # 各ラインの9マスに None が無く、重複なし → 完成とみなす
+    # 各ラインの9マスに None がなく、かつ重複がない
     for direction, lines in combos.items():
         for line in lines:
             digits = []
@@ -250,45 +256,67 @@ def check_all_lines_completed(board_values, combos):
                 return False
     return True
 
-combinations = generate_combinations()
-
-# 重複チェック
-duplicates_found, duplicate_info = check_duplicates(st.session_state.board_values, combinations)
-st.subheader("重複チェック結果")
-if duplicates_found:
-    st.error("⚠️ 重複あり")
-    for info in duplicate_info:
-        st.write(info)
+#############################################
+# 重複チェックの結果表示
+#############################################
+st.subheader("🔎 重複チェック結果")
+dup_found, dup_info = check_duplicates(st.session_state.board_values, combinations)
+if dup_found:
+    st.error("⚠️ 重複があります。")
+    for d in dup_info:
+        st.write(d)
 else:
-    st.success("✅ 重複はありません")
+    st.success("✅ 重複はありません。")
 
+#############################################
 # 完成判定
+#############################################
 if check_all_lines_completed(st.session_state.board_values, combinations):
     st.balloons()
-    st.success("🎉 全ライン完成です！")
+    st.success("🎉 全ライン完成です！おめでとうございます！")
 
-# CSV読込関数
+#############################################
+# CSV読込用関数 (ValueError 例外処理付き)
+#############################################
 def load_puzzle_from_csv(filename):
+    """
+    CSV内に数値以外が混ざっていたら ValueError が起きるので
+    try/except で None に置き換える。
+    """
     df = pd.read_csv(filename, header=None)
     arr = df.where(pd.notnull(df), None).values.tolist()
+
     for r_idx, row_data in enumerate(arr):
         for c_idx, val in enumerate(row_data):
             if val is not None:
-                arr[r_idx][c_idx] = int(val)
+                try:
+                    arr[r_idx][c_idx] = int(val)
+                except ValueError:
+                    # 数値以外の場合は None にして警告
+                    st.warning(f"無効値をNoneとして扱いました: row={r_idx}, col={c_idx}, value={val}")
+                    arr[r_idx][c_idx] = None
+            else:
+                arr[r_idx][c_idx] = None
     return arr
 
-# パズル読込UI
-puzzle_folder = "puzzles"
+#############################################
+# パズルのCSVを読み込みボタンで適用
+#############################################
+puzzle_folder = 'puzzles'
 if os.path.isdir(puzzle_folder):
-    puzzle_files = [f for f in os.listdir(puzzle_folder) if f.endswith(".csv")]
+    puzzle_files = [f for f in os.listdir(puzzle_folder) if f.endswith('.csv')]
     if puzzle_files:
-        selected_file = st.selectbox("パズルを選択", puzzle_files)
+        selected_puzzle = st.selectbox("📁 パズルを選択", puzzle_files)
         if st.button("選択したパズルを読み込み"):
-            puzzle_path = os.path.join(puzzle_folder, selected_file)
-            loaded_puzzle = load_puzzle_from_csv(puzzle_path)
-            st.session_state.board_values = loaded_puzzle
-            # 最初に読み込んだ状態だけが初期値
-            st.session_state.initial_board_values = loaded_puzzle
-            st.success(f"{selected_file} を読み込みました！")
+            puzzle_path = os.path.join(puzzle_folder, selected_puzzle)
+            loaded = load_puzzle_from_csv(puzzle_path)
+            # board_values にセット
+            st.session_state.board_values = loaded
+            # 初期値 -> 薄青
+            st.session_state.initial_board_values = loaded
+            st.success(f"{selected_puzzle} を読み込みました。")
+    else:
+        st.warning("puzzles フォルダに CSV がありません。")
 else:
     st.warning("puzzles フォルダが見つかりません。")
+
