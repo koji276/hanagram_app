@@ -72,3 +72,62 @@ if st.button('数字をセルに入力'):
 
 selected_pos = (row, col)
 draw_board(st.session_state.board_values, selected_pos)
+
+# セル位置を基準に12列を生成する関数
+def generate_combinations():
+    board_structure = [
+        ['N', 'N', 'N', 'U', 'D', 'U', 'N', 'N', 'N'],
+        ['U', 'D', 'U', 'D', 'U', 'D', 'U', 'D', 'U'],
+        ['D', 'U', 'D', 'U', 'D', 'U', 'D', 'U', 'D'],
+        ['U', 'D', 'U', 'D', 'U', 'D', 'U', 'D', 'U'],
+        ['D', 'U', 'D', 'U', 'D', 'U', 'D', 'U', 'D'],
+        ['N', 'N', 'N', 'D', 'U', 'D', 'N', 'N', 'N'],
+    ]
+
+    combinations = {
+        '横': [],
+        '斜め_右上から左下': [],
+        '斜め_左上から右下': [],
+    }
+
+    # 横方向の4列 (上から順に)
+    for row_idx, row in enumerate(board_structure):
+        temp_row = []
+        for col_idx, cell in enumerate(row):
+            if cell != 'N':
+                temp_row.append((row_idx, col_idx))
+        if temp_row:
+            combinations['横'].append(temp_row)
+
+    # 斜め方向（右上から左下）
+    diagonals_rl = {}
+    for row_idx in range(6):
+        for col_idx in range(9):
+            if board_structure[row_idx][col_idx] != 'N':
+                key = col_idx - row_idx
+                diagonals_rl.setdefault(key, []).append((row_idx, col_idx))
+
+    combinations['斜め_右上から左下'] = [v for v in diagonals_rl.values() if len(v) > 1]
+
+    # 斜め方向（左上から右下）
+    diagonals_lr = {}
+    for row_idx in range(6):
+        for col_idx in range(9):
+            if board_structure[row_idx][col_idx] != 'N':
+                key = col_idx + row_idx
+                diagonals_lr.setdefault(key, []).append((row_idx, col_idx))
+
+    combinations['斜め_左上から右下'] = [v for v in diagonals_lr.values() if len(v) > 1]
+
+    return combinations
+
+# 組み合わせを表示（テスト用）
+combinations = generate_combinations()
+
+# Streamlit上で確認
+st.subheader("12列の組み合わせ確認（テスト表示）")
+for direction, lines in combinations.items():
+    st.write(f"### {direction}")
+    for idx, line in enumerate(lines):
+        st.write(f"{direction} - 列{idx+1}: {line}")
+
