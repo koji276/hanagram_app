@@ -234,4 +234,3 @@ if st.button('選択したパズルを読み込み'):
 
     st.success(f"{selected_puzzle_file} を読み込みました！")
     # st.experimental_rerun()  # 必要に応じてコメントアウト外すと即リロード
-
