@@ -90,13 +90,13 @@ def generate_combinations():
         '斜め_左上から右下': [],
     }
 
-    # 横方向の4列 (上から順に)
+    # 横方向 (3つ以下の短いものを除外)
     for row_idx, row in enumerate(board_structure):
         temp_row = []
         for col_idx, cell in enumerate(row):
             if cell != 'N':
                 temp_row.append((row_idx, col_idx))
-        if temp_row:
+        if len(temp_row) > 3:  # ←ここで3以下の短い列を除外
             combinations['横'].append(temp_row)
 
     # 斜め方向（右上から左下）
