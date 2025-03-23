@@ -123,7 +123,7 @@ if 'highlight_digits' not in st.session_state:
 #############################################
 # タイトル
 #############################################
-st.title('Hanagramアプリ（https://www.hanagram.net/）')
+st.title('Hanagramアプリ https://www.hanagram.net')
 
 #############################################
 # 列(A～L)＆番号(0～8) 選択
