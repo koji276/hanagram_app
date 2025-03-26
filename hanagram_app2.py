@@ -98,7 +98,7 @@ def draw_board_plotly(board_values, selected_pos, initial_board_values,
                 path=path_d,
                 fillcolor=color,
                 line=dict(color="black"),
-                name=shape_name
+                name=shape_name,
                 layer='below'  # <-- これを追加！
             )
 
