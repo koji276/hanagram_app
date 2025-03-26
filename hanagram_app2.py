@@ -180,6 +180,7 @@ def draw_board_plotly(board_values, selected_pos, initial_board_values,
         plot_bgcolor='white',
         paper_bgcolor='white',
         dragmode=False
+        clickmode='event+select'
     )
 
     # ここで plotly_events を呼び出す → 余計な引数は付けない
