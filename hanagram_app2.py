@@ -268,12 +268,19 @@ def check_all_lines_completed(board_values, combos):
 #############################################
 def load_puzzle_from_csv(filename):
     df = pd.read_csv(filename, header=None)
+    # df の欠損値(NaN)を None に変換
     puzzle_data = df.where(pd.notnull(df), None).values.tolist()
+
     for r_idx, row_data in enumerate(puzzle_data):
         for c_idx, val in enumerate(row_data):
             if val is not None:
-                puzzle_data[r_idx][c_idx] = int(val)
+                try:
+                    puzzle_data[r_idx][c_idx] = int(val)
+                except ValueError:
+                    # 変換できない値は None に置き換え
+                    puzzle_data[r_idx][c_idx] = None
     return puzzle_data
+
 
 #############################################
 # パズル読み込みUI
