@@ -179,7 +179,7 @@ def draw_board_plotly(board_values, selected_pos, initial_board_values,
         margin=dict(l=10, r=10, t=10, b=10),
         plot_bgcolor='white',
         paper_bgcolor='white',
-        dragmode=False
+        dragmode=False,
         clickmode='event+select'
     )
 
