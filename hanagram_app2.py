@@ -48,58 +48,36 @@ height = np.sqrt(3) / 2
 #############################################
 # Plotly で三角形セルを描画し、クリックイベントを拾う関数
 #############################################
-def draw_board_plotly(
-    board_values,
-    selected_pos,
-    initial_board_values,
-    puzzle_completed=False,
-    highlight_digits=None
-):
-    """
-    Plotly 図形 (shapes) + 散布図トレース で
-    マウスクリック (スマホならタップ) したセルを特定できるようにします。
-    戻り値: clicked_cell (タップされたセル座標 or None)
-    """
-
+def draw_board_plotly(board_values, selected_pos, initial_board_values,
+                      puzzle_completed=False, highlight_digits=None):
     fig = go.Figure()
-
     for r_idx, row_data in enumerate(board_structure):
         for c_idx, cell_dir in enumerate(row_data):
             if cell_dir == 'N':
-                continue  # セルが存在しない
-
+                continue
             x_offset = c_idx * 0.5
             y_offset = (5 - r_idx) * height
-
-            # 三角形の頂点を計算
             if cell_dir == 'U':
-                # 上向き三角形
                 p1 = (x_offset,       y_offset)
                 p2 = (x_offset+0.5,  y_offset+height)
                 p3 = (x_offset+1.0,  y_offset)
             else:
-                # 下向き三角形
                 p1 = (x_offset,       y_offset+height)
                 p2 = (x_offset+0.5,  y_offset)
                 p3 = (x_offset+1.0,  y_offset+height)
-
             val = board_values[r_idx][c_idx]
 
-            # 色分け (初期値 / 選択セル / 通常セル / 完成時ハイライト)
+            # 色分け
             if initial_board_values[r_idx][c_idx] is not None:
                 color = 'lightblue'
             elif (r_idx, c_idx) == selected_pos:
                 color = 'yellow'
             else:
                 color = 'white'
-
             if puzzle_completed and highlight_digits and (val in highlight_digits):
                 color = 'pink'
 
-            # SVG パス形式で三角形を定義
             path_d = f"M {p1[0]},{p1[1]} L {p2[0]},{p2[1]} L {p3[0]},{p3[1]} Z"
-
-            # shapes としてセルを追加（クリック時に区別できるよう name や customdata を付与）
             shape_name = f"cell_{r_idx}_{c_idx}"
             fig.add_shape(
                 type="path",
@@ -109,19 +87,18 @@ def draw_board_plotly(
                 name=shape_name
             )
 
-            # 数字を散布図トレースとして上に描画 (クリックイベント取得のため)
             cx = (p1[0] + p2[0] + p3[0]) / 3.0
             cy = (p1[1] + p2[1] + p3[1]) / 3.0
             text_val = str(val) if val is not None else ""
             fig.add_trace(go.Scatter(
                 x=[cx],
                 y=[cy],
-                text=[text_val],     # セルの数字
+                text=[text_val],
                 mode="text",
                 textposition="middle center",
                 textfont=dict(size=14),
                 name=shape_name,
-                customdata=[(r_idx, c_idx)],  # こちらに row, col を保存
+                customdata=[(r_idx, c_idx)],
                 hoverinfo="skip"
             ))
 
@@ -177,33 +154,28 @@ def draw_board_plotly(
     fig.update_xaxes(showgrid=False, zeroline=False, visible=False)
     fig.update_yaxes(showgrid=False, zeroline=False, visible=False)
     fig.update_layout(
-        width=700,         # お好みでサイズ調整
+        width=700,
         height=700,
         margin=dict(l=10, r=10, t=10, b=10),
         plot_bgcolor='white',
         paper_bgcolor='white',
-        dragmode=False     # 図をドラッグで移動できないようにする
+        dragmode=False
     )
 
-    # クリックイベントを取得
-selected_points = plotly_events(
-    fig,
-    click_event=True,
-    hover_event=False,
-    select_event=False,
-    override_plotly_domin=True
-)
+    # ここで plotly_events を呼び出す → 余計な引数は付けない
+    selected_points = plotly_events(
+        fig,
+        click_event=True,
+        hover_event=False,
+        select_event=False,
+    )
 
-
-    # selected_points は [{'curveNumber': .., 'pointNumber': .., 'customdata': (row, col)}, ...]
     clicked_cell = None
     if selected_points:
-        # 最新のクリックイベントを取り出す
         event = selected_points[-1]
         if 'customdata' in event and isinstance(event['customdata'], (list, tuple)):
             if len(event['customdata']) == 2:
                 clicked_cell = (event['customdata'][0], event['customdata'][1])
-
     return clicked_cell
 
 #############################################
