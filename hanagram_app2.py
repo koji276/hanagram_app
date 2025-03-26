@@ -185,7 +185,7 @@ def draw_board_plotly(board_values, selected_pos, initial_board_values,
         select_event=False,
     )
 
-st.write("selected_points:", selected_points)  # ← デバッグ表示
+    st.write("selected_points:", selected_points)  # ← デバッグ表示
 
     clicked_cell = None
     if selected_points:
