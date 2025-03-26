@@ -338,7 +338,6 @@ if puzzle_files:
         options=puzzle_files,
         key="selected_file"
     )
-
     def load_selected_puzzle():
         puzzle_path = os.path.join(puzzle_folder, st.session_state.selected_file)
         loaded_puzzle = load_puzzle_from_csv(puzzle_path)
