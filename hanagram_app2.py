@@ -106,27 +106,24 @@ def draw_board_plotly(
                 path=path_d,
                 fillcolor=color,
                 line=dict(color="black"),
-                name=shape_name,
-                # クリック情報
-                customdata=dict(row=r_idx, col=c_idx)
+                name=shape_name
             )
 
             # 数字を散布図トレースとして上に描画 (クリックイベント取得のため)
             cx = (p1[0] + p2[0] + p3[0]) / 3.0
             cy = (p1[1] + p2[1] + p3[1]) / 3.0
             text_val = str(val) if val is not None else ""
-            fig.add_trace(
-                go.Scatter(
-                    x=[cx], y=[cy],
-                    text=[text_val],
-                    mode="text",
-                    textposition="middle center",
-                    textfont=dict(size=14),
-                    name=shape_name,
-                    customdata=[(r_idx, c_idx)],  # クリック時に row, col を返す
-                    hoverinfo="skip"              # ホバーラベルを出さない
-                )
-            )
+            fig.add_trace(go.Scatter(
+                x=[cx],
+                y=[cy],
+                text=[text_val],     # セルの数字
+                mode="text",
+                textposition="middle center",
+                textfont=dict(size=14),
+                name=shape_name,
+                customdata=[(r_idx, c_idx)],  # こちらに row, col を保存
+                hoverinfo="skip"
+            ))
 
     # ラベル(A～L)を描画する(散布図トレース or shape)
     label_positions = {
