@@ -190,8 +190,10 @@ selected_points = plotly_events(
     fig,
     click_event=True,
     hover_event=False,
-    select_event=False
+    select_event=False,
+    override_plotly_domin=True
 )
+
 
     # selected_points は [{'curveNumber': .., 'pointNumber': .., 'customdata': (row, col)}, ...]
     clicked_cell = None
