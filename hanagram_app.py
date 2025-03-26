@@ -5,6 +5,37 @@ import matplotlib.pyplot as plt
 import numpy as np
 import copy
 
+# --- ① ページレイアウトを wide に設定 ---
+st.set_page_config(page_title="Hanagram", layout="wide")
+
+# --- ② 余白を減らす CSS を注入する関数 ---
+def reduce_streamlit_padding():
+    st.markdown(
+        """
+        <style>
+            /* メインコンテンツ周辺の余白を抑える */
+            .css-18e3th9 {
+                padding-top: 1rem;
+                padding-bottom: 1rem;
+            }
+            /* 必要に応じて他のクラスも調整可能 */
+            .css-1d391kg {
+                padding-top: 0rem;
+                padding-bottom: 0rem;
+            }
+            /* タイトルの余白やフォントを調整したければ下記のように指定 */
+            .css-1v0mbdj {
+                margin-top: 0rem;
+                margin-bottom: 0rem;
+            }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+# --- ③ 余白削減用の関数を実行 ---
+reduce_streamlit_padding()
+
 #############################################
 # 三角形描画
 #############################################
@@ -38,8 +69,7 @@ def draw_triangle(ax, x, y, direction='U', value=None, color='white'):
 def draw_board(board_values, selected_pos, initial_board_values, puzzle_completed=False, highlight_digits=None):
     """puzzle_completed: bool
        highlight_digits: (list or set) 完成時にピンクでハイライトする数字群"""
-    fig, ax = plt.subplots(figsize=(8, 8))
-
+    fig, ax = plt.subplots(figsize=(8, 8))  # 必要に応じて小さめにする (例: (6,6))
     board_structure = [
         ['N', 'N', 'N', 'U', 'D', 'U', 'N', 'N', 'N'],
         ['U', 'D', 'U', 'D', 'U', 'D', 'U', 'D', 'U'],
@@ -57,15 +87,15 @@ def draw_board(board_values, selected_pos, initial_board_values, puzzle_complete
                 y_offset = (5 - r_idx) * height
                 value = board_values[r_idx][c_idx]
 
-                # --- 通常ロジックで色を決定 ---
+                # 通常ロジックで色を決定
                 if initial_board_values[r_idx][c_idx] is not None:
-                    color = 'lightblue'   # 初期値(変更不可)
+                    color = 'lightblue'  # 初期値(変更不可)
                 elif (r_idx, c_idx) == selected_pos:
-                    color = 'yellow'      # 選択中のセル
+                    color = 'yellow'     # 選択中のセル
                 else:
-                    color = 'white'       # 通常セル（ユーザーが入力可）
+                    color = 'white'      # 通常セル（ユーザーが入力可）
 
-                # --- パズル完成済かつハイライト対象の数字ならピンクで上書き ---
+                # パズル完成済かつハイライト対象の数字ならピンクで上書き
                 if puzzle_completed and highlight_digits and value in highlight_digits:
                     color = 'pink'
 
@@ -105,7 +135,10 @@ def draw_board(board_values, selected_pos, initial_board_values, puzzle_complete
     ax.set_ylim(-2, 7)
     ax.set_aspect('equal')
     ax.axis('off')
+
+    # コンパクトに表示したい場合: use_container_width=True も試せる
     st.pyplot(fig)
+    # st.pyplot(fig, use_container_width=True)
 
 #############################################
 # セッション初期化
@@ -116,7 +149,7 @@ if 'board_values' not in st.session_state:
 if 'initial_board_values' not in st.session_state:
     st.session_state.initial_board_values = [[None]*9 for _ in range(6)]
 
-# ハイライト対象の数字を保持する Session State（最初は空リスト/空セットなど）
+# ハイライト対象の数字を保持する Session State
 if 'highlight_digits' not in st.session_state:
     st.session_state.highlight_digits = []
 
@@ -153,7 +186,6 @@ pos_index = st.selectbox("番号(0～8)を選択", list(range(9)))
 number = st.selectbox("数字を選んでください", [None,0,1,2,3,4,5,6,7,8,9])
 
 if st.button('数字をセルに入力'):
-    # board_structure
     board_structure = [
         ['N','N','N','U','D','U','N','N','N'],
         ['U','D','U','D','U','D','U','D','U'],
@@ -204,7 +236,8 @@ def generate_combinations():
         [(4,0),(4,1),(4,2),(4,3),(4,4),(4,5),(4,6),(4,7),(4,8)],
         [(3,0),(3,1),(3,2),(3,3),(3,4),(3,5),(3,6),(3,7),(3,8)],
         [(2,0),(2,1),(2,2),(2,3),(2,4),(2,5),(2,6),(2,7),(2,8)],
-        [(1,0),(1,1),(1,2),(1,3),(1,4),(1,5),(1,6),(1,7),(1,08)]
+        # 以下に誤字があったので修正: (1,08) → (1,8)
+        [(1,0),(1,1),(1,2),(1,3),(1,4),(1,5),(1,6),(1,7),(1,8)]
     ]
     return combos
 
@@ -254,7 +287,7 @@ draw_board(
 )
 
 #############################################
-#  重複チェック＆完成メッセージ
+# 重複チェック＆完成メッセージ
 #############################################
 st.subheader("🔎 数字の重複チェック結果")
 if dup_found:
@@ -267,18 +300,15 @@ else:
 if puzzle_completed:
     st.balloons()
     st.success("🎉 すべてのラインが完成しました！")
-    # --- 完成後のみハイライトUIを表示 ---
+    # 完成後のみハイライトUIを表示
     st.subheader("🌸 花柄(ハナグラム)表示オプション")
-    # 0~9のうち、どの数字をピンクにするか複数選択
     selected_digits = st.multiselect(
         "ピンク色でハイライトする数字を選んでください（複数選択可）",
         [0,1,2,3,4,5,6,7,8,9],
-        default = st.session_state.highlight_digits  # 既存のハイライトを初期表示
+        default = st.session_state.highlight_digits
     )
     if st.button("表示"):
-        # ハイライトする数字リストを更新
         st.session_state.highlight_digits = selected_digits
-#        st.experimental_rerun()  # すぐ画面反映したい場合は再実行
 else:
     st.info("パズルが完成すると、選択した数字をピンクでハイライトできます。")
 
@@ -297,7 +327,7 @@ def load_puzzle_from_csv(filename):
     return puzzle_data
 
 #############################################
-# パズル読み込みUI（ボタンを残す方法）
+# パズル読み込みUI
 #############################################
 puzzle_folder = 'puzzles'
 puzzle_files = [f for f in os.listdir(puzzle_folder) if f.endswith('.csv')]
@@ -312,10 +342,8 @@ if puzzle_files:
     def load_selected_puzzle():
         puzzle_path = os.path.join(puzzle_folder, st.session_state.selected_file)
         loaded_puzzle = load_puzzle_from_csv(puzzle_path)
-        # board_values と initial_board_values を deepcopy で分離
         st.session_state.board_values = copy.deepcopy(loaded_puzzle)
         st.session_state.initial_board_values = copy.deepcopy(loaded_puzzle)
-        # ハイライト選択もクリアする（パズル切り替え時にリセットしたい場合）
         st.session_state.highlight_digits = []
         st.success(f"{st.session_state.selected_file} を読み込みました！")
 
