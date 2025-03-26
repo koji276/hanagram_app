@@ -6,6 +6,20 @@ import copy
 import plotly.graph_objects as go
 from streamlit_plotly_events import plotly_events
 
+def load_selected_puzzle():
+    puzzle_path = os.path.join(puzzle_folder, st.session_state.selected_file)
+    loaded_puzzle = load_puzzle_from_csv(puzzle_path)
+    st.session_state.board_values = copy.deepcopy(loaded_puzzle)
+    st.session_state.initial_board_values = copy.deepcopy(loaded_puzzle)
+    st.session_state.highlight_digits = []
+    st.session_state.selected_pos = (None, None)
+
+    # ▼ここを追加
+    st.write("読み込んだパズルデータ:", st.session_state.board_values)
+
+    st.success(f"{st.session_state.selected_file} を読み込みました！")
+
+
 #############################################
 # ページレイアウト設定 (任意)
 #############################################
