@@ -159,8 +159,8 @@ def draw_board_plotly(board_values, selected_pos, initial_board_values,
             x=label_x,
             y=label_y,
             text=label_text,
-#           mode="text",
-#           textfont=dict(size=16, color="red"),
+             # mode="text",
+             # textfont=dict(size=16, color="red"),
             mode="markers+text",  # 大きな円＋テキスト
             marker=dict(size=30, color="rgba(255,0,0,0.3)"),  # 赤い半透明マーカー
 
