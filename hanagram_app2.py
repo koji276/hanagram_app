@@ -99,6 +99,7 @@ def draw_board_plotly(board_values, selected_pos, initial_board_values,
                 fillcolor=color,
                 line=dict(color="black"),
                 name=shape_name
+                layer='below'  # <-- これを追加！
             )
 
             cx = (p1[0] + p2[0] + p3[0]) / 3.0
