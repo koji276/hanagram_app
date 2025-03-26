@@ -186,13 +186,12 @@ def draw_board_plotly(
     )
 
     # クリックイベントを取得
-    selected_points = plotly_events(
-        fig,
-        click_event=True,  
-        hover_event=False,
-        select_event=False,
-        override_plotly_layout=True
-    )
+selected_points = plotly_events(
+    fig,
+    click_event=True,
+    hover_event=False,
+    select_event=False
+)
 
     # selected_points は [{'curveNumber': .., 'pointNumber': .., 'customdata': (row, col)}, ...]
     clicked_cell = None
