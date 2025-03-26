@@ -108,9 +108,10 @@ def draw_board_plotly(board_values, selected_pos, initial_board_values,
                 x=[cx],
                 y=[cy],
                 text=[text_val],
-                mode="text",
+                mode="markers+text",  # ← markersを足す
+                marker=dict(size=30, color="rgba(0,0,0,0)"),  # 透明マーカー
+                textfont=dict(size=16, color="black"),
                 textposition="middle center",
-                textfont=dict(size=14),
                 name=shape_name,
                 customdata=[(r_idx, c_idx)],
                 hoverinfo="skip"
